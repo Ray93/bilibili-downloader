@@ -33,7 +33,7 @@ There is no linter/formatter configured; do not claim a lint step exists.
 ## Generated files — do not edit
 
 - `dist/` — produced entirely by `pnpm build` (`main.js`, `resolve.js`, `auth.js`, `manifest.json`). Hand edits are discarded on the next build. `LICENSE` is also copied into `dist/` by `build`: it comes from the `assets` array in `fluxdown-plugin.config.json`, not from a manifest entry.
-- `*.fxplug` at the repo root — `pnpm run pack` artifact (zip of `dist/`). Currently `fluxdown@bilibili-downloader-0.2.0.fxplug`; the name comes from `manifest.json` `identity` + `version`, so a version bump renames the artifact.
+- `*.fxplug` at the repo root — `pnpm run pack` artifact (zip of `dist/`). Currently `fluxdown@bilibili-downloader-{version}.fxplug`; the name comes from `manifest.json` `identity` + `version`, so a version bump renames the artifact.
 - Both are gitignored. Do not commit them.
 
 ## How the build works (non-obvious)

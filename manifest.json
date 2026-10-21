@@ -1,7 +1,7 @@
 {
   "identity": "fluxdown@bilibili-downloader",
   "name": "Bilibili Downloader",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Bilibili 视频插件：支持番剧、UP 主投稿订阅、DASH 解析、二维码登录及登录态复用。",
   "homepage": "https://github.com/Ray93/bilibili-downloader",
   "minAppVersion": "0.1.64",

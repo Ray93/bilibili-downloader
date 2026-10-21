@@ -29,7 +29,7 @@
 ### 从安装包安装
 
 1. 打开 FluxDown 的「设置 → 扩展 → 插件」。
-2. 点击「通过 ZIP 安装」，选择 `fluxdown@bilibili-downloader-0.2.0.fxplug`（部分客户端只显示 `.zip`，把扩展名改成 `.zip` 即可，不要先解压）。
+2. 点击「通过 ZIP 安装」，选择 `fluxdown@bilibili-downloader-{0.3.0}.fxplug`（部分客户端只显示 `.zip`，把扩展名改成 `.zip` 即可，不要先解压）。
 3. 安装成功后确认插件已启用。
 
 插件包根目录必须直接包含 `manifest.json`、`main.js`、`resolve.js`、`auth.js`。
@@ -162,7 +162,3 @@ pnpm dev           # 监听重建
 - Cookie 是用户机密：只写入插件 storage 与 FD 认证档案，不写日志、不写清单、不进仓库。
 - 诊断日志只记录布尔状态与画质信息，不包含 Cookie 值。
 - 不要提交从浏览器导出的 `cookies.txt`。
-
-## 版本
-
-当前版本：`0.2.0`
