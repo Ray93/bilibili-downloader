@@ -171,8 +171,8 @@ describe("videoPageBaseName", () => {
     expect(videoPageBaseName(single, 9)).toBe("单P标题");
   });
 
-  it("adds the page label for multi-page videos", () => {
-    expect(videoPageBaseName(multi, 2)).toBe("多P标题 - P2 第二P");
+  it("uses the page label alone for multi-page videos", () => {
+    expect(videoPageBaseName(multi, 2)).toBe("P2 第二P");
   });
 
   it("skips a part title that just repeats the title", () => {
@@ -183,7 +183,7 @@ describe("videoPageBaseName", () => {
         { cid: 2, page: 2, part: "" },
       ],
     });
-    expect(videoPageBaseName(view, 1)).toBe("同名 - P1");
+    expect(videoPageBaseName(view, 1)).toBe("P1");
   });
 
   it("falls back to the title for an unknown cid", () => {
@@ -271,8 +271,8 @@ describe("resolveVideoManifest", () => {
       "video:" + BV + ":cid:201@q:80",
     ]);
     expect(result.manifest?.items.map((item) => item.name)).toEqual([
-      "多P视频 - P1 第一P [1080p-高清].mp4",
-      "多P视频 - P2 第二P [1080p-高清].mp4",
+      "P1 第一P [1080p-高清].mp4",
+      "P2 第二P [1080p-高清].mp4",
     ]);
   });
 
@@ -289,7 +289,7 @@ describe("resolveVideoManifest", () => {
     expect(result.manifest?.items.map((item) => item.id)).toEqual([
       "video:" + BV + ":cid:201@q:80",
     ]);
-    expect(result.manifest?.items[0].name).toBe("多P视频 - P2 第二P [1080p-高清].mp4");
+    expect(result.manifest?.items[0].name).toBe("P2 第二P [1080p-高清].mp4");
   });
 
   it("falls back to every page when ?p=N is out of range", async () => {
@@ -393,7 +393,7 @@ describe("resolveUploaderVideo title", () => {
         resolverItem: "video:" + BV + ":cid:201@q:80",
       }),
     );
-    expect(result.fileName).toBe("多P视频 - P2 第二P [1080p-高清].mp4");
+    expect(result.fileName).toBe("P2 第二P [1080p-高清].mp4");
     expect(result.ephemeral).toBe(true);
     expect(result.rangeSupported).toBe(true);
     expect(result.audioUrl).toBe("https://cdn.example/audio.m4s");

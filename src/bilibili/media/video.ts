@@ -107,7 +107,8 @@ export async function fetchVideoView(
 /**
  * 分P的基准名（不含画质标签与扩展名）。
  *
- * 多P时带上 `P<序号> <分P标题>`，否则各分P会撞成同一个文件名；
+ * 多P时只用 `P<序号> <分P标题>`：视频标题已经由清单组名承载，再拼一遍会让宿主
+ * 列表里的名字长到必须截断（清单文件行不会显示完整名字）。
  * 单P保持纯视频标题，和 UP 主投稿订阅的命名习惯一致。
  */
 export function videoPageBaseName(view: VideoView | null | undefined, cid: unknown): string {
@@ -124,5 +125,6 @@ export function videoPageBaseName(view: VideoView | null | undefined, cid: unkno
   if (!page || pages.length <= 1) return sanitizeFileName(title);
   const part = page.part && page.part !== title ? page.part : "";
   const label = "P" + String(page.page || 1) + (part ? " " + part : "");
-  return sanitizeFileName(title + " - " + label);
+  // 视频标题已经由清单组名承载，这里不再重复，否则长标题会被宿主截断。
+  return sanitizeFileName(label);
 }
