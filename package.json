@@ -1,0 +1,19 @@
+{
+  "name": "bilibili-downloader",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "fluxdown-plugin build",
+    "validate": "fluxdown-plugin validate",
+    "pack": "fluxdown-plugin pack",
+    "dev": "fluxdown-plugin dev",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fluxdown-plugin-sdk": "^0.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

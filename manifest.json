@@ -1,0 +1,25 @@
+{
+  "identity": "ray93@bilibili-downloader",
+  "name": "Bilibili Downloader",
+  "version": "0.1.0",
+  "description": "A FluxDown plugin built with fluxdown-plugin-sdk.",
+  "main": {
+    "entry": "main.js"
+  },
+  "contributes": {
+    "views": [
+      {
+        "id": "dashboard",
+        "title": "Bilibili Downloader",
+        "location": "activity"
+      }
+    ],
+    "commands": [
+      {
+        "id": "hello",
+        "title": "Say hello",
+        "palette": true
+      }
+    ]
+  }
+}
