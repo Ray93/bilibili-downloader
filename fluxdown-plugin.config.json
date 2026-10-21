@@ -1,7 +1,9 @@
 {
   "entries": {
-    "main.js": "src/main.tsx"
+    "main.js": "src/main.tsx",
+    "resolve.js": "src/resolve.ts",
+    "auth.js": "src/auth.ts"
   },
   "desktop": {},
-  "assets": []
+  "assets": ["LICENSE"]
 }

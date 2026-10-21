@@ -1,6 +1,7 @@
 {
   "name": "bilibili-downloader",
   "private": true,
+  "license": "MIT",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -8,12 +9,14 @@
     "validate": "fluxdown-plugin validate",
     "pack": "fluxdown-plugin pack",
     "dev": "fluxdown-plugin dev",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "fluxdown-plugin-sdk": "^0.2.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.4"
   }
 }
