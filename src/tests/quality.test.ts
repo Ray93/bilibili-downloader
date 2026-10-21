@@ -6,7 +6,9 @@ import {
   chooseDashIndex,
   chooseVariantIndex,
   pickAudioTrack,
+  playDurationMs,
   selectListedQualityVariants,
+  streamBytes,
   variantQualityTag,
   videoHeight,
   videoQualityLabel,
@@ -85,6 +87,51 @@ describe("quality labels", () => {
     expect(variantQualityTag({ label: "1080p", qualityId: 0, height: 0 })).toBe(
       "unknown-quality",
     );
+  });
+});
+
+describe("stream size", () => {
+  function sizedless(id: number, height: number, bandwidth: number): DashStream {
+    return {
+      id,
+      height,
+      width: 1920,
+      codecs: "avc1.640028",
+      bandwidth,
+      base_url: "https://cdn/" + id + ".m4s",
+    };
+  }
+
+  it("prefers an explicit size from the API", () => {
+    expect(streamBytes({ size: 1234, bandwidth: 999 }, 1000)).toBe(1234);
+  });
+
+  it("estimates from bandwidth and duration when size is missing", () => {
+    // 1 000 000 bit/s × 8 s / 8 = 1 000 000 bytes
+    expect(streamBytes(sizedless(80, 1080, 1000000), 8000)).toBe(1000000);
+    expect(streamBytes(sizedless(80, 1080, 1000000), 0)).toBe(0);
+    expect(streamBytes(undefined, 8000)).toBe(0);
+  });
+
+  it("reads the duration from timelength or dash.duration", () => {
+    expect(playDurationMs({ timelength: 1262680 })).toBe(1262680);
+    expect(playDurationMs({ dash: { duration: 1263 } })).toBe(1263000);
+    expect(playDurationMs({})).toBe(0);
+    expect(playDurationMs(null)).toBe(0);
+  });
+
+  it("fills variant sizes when playurl omits them", () => {
+    const play: PlayResult = {
+      timelength: 8000,
+      dash: {
+        duration: 8,
+        video: [sizedless(80, 1080, 1000000)],
+        audio: [sizedless(30280, 0, 192000)],
+      },
+    };
+    const variants = buildVariantsFromPlay(play, "t");
+    expect(variants[0].totalBytes).toBe(1000000 + 192000);
+    expect(variants[variants.length - 1].totalBytes).toBe(192000);
   });
 });
 

@@ -45,6 +45,29 @@ export function streamSize(stream: DashStream | null | undefined): number {
   return value > 0 ? value : 0;
 }
 
+/** 稿件时长（毫秒）：UGV playurl 给 `timelength`，PGC 有时只给 `dash.duration`。 */
+export function playDurationMs(play: PlayResult | null | undefined): number {
+  const timelength = asNumber(play && play.timelength);
+  if (timelength > 0) return timelength;
+  const dashDuration = asNumber(asRecord(play && play.dash).duration);
+  return dashDuration > 0 ? dashDuration * 1000 : 0;
+}
+
+/**
+ * 单条流的字节数。
+ *
+ * DASH 的 playurl 响应只有 `bandwidth`（bit/s），没有 `size`；
+ * 实测 `bandwidth × 时长 / 8` 与 CDN 的 Content-Length 相差不到 0.1%，
+ * 所以拿它当清单里的预估大小，比一律 0 有用得多。
+ */
+export function streamBytes(stream: DashStream | null | undefined, durationMs: number): number {
+  const explicit = streamSize(stream);
+  if (explicit > 0) return explicit;
+  const bandwidth = asNumber(stream && stream.bandwidth);
+  if (bandwidth <= 0 || durationMs <= 0) return 0;
+  return Math.round((bandwidth * durationMs) / 8000);
+}
+
 export function pickAudioTrack(audios: DashStream[]): DashStream | null {
   let best: DashStream | null = null;
   let score = -1;
@@ -159,6 +182,7 @@ export function buildDashVariants(
   });
 
   const variants: Variant[] = [];
+  const durationMs = playDurationMs(play);
   for (const item of candidates) {
     if (variants.length >= MAX_VARIANTS) break;
     const video = item.video;
@@ -170,7 +194,7 @@ export function buildDashVariants(
       fileName:
         title + " [" + variantQualityTag({ label, qualityId, height: item.height }) + "].mp4",
       qualityId,
-      totalBytes: streamSize(video) + streamSize(audio),
+      totalBytes: streamBytes(video, durationMs) + streamBytes(audio, durationMs),
       bandwidth: asNumber(video.bandwidth),
       width: asNumber(video.width),
       height: item.height,
@@ -185,7 +209,7 @@ export function buildDashVariants(
       url: audioUrl(audio),
       fileName: title + " [audio].m4a",
       qualityId: 0,
-      totalBytes: streamSize(audio),
+      totalBytes: streamBytes(audio, durationMs),
       bandwidth: asNumber(audio.bandwidth),
       width: 0,
       height: 0,

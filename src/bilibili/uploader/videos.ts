@@ -3,12 +3,12 @@
 
 import type { ResolveContext, SubscribeContext } from "fluxdown-plugin-sdk";
 import type { PluginHost } from "../../host";
-import { apiGet } from "../http/client";
 import { apiGetWbi } from "../http/wbi";
 import { episodePubDate } from "../media/episodes";
+import { fetchVideoView } from "../media/video";
 import { UPLOADER_VIDEO_LIMIT } from "../shared/constants";
 import { asArray, asNumber, asRecord, asText, sanitizeFileName } from "../shared/text";
-import type { SpaceVideoRaw, ViewResult } from "../shared/types";
+import type { SpaceVideoRaw } from "../shared/types";
 
 export interface UploaderVideo {
   bvid: string;
@@ -101,15 +101,10 @@ export async function listUploaderVideos(
       if (index >= normalized.length) return;
       const current = normalized[index];
       try {
-        const view = await apiGet<ViewResult>(
-          host,
-          "/x/web-interface/view?bvid=" + encodeURIComponent(current.bvid),
-          ctx,
-          cookie,
-        );
-        const pages = asArray(view && view.pages).map(asRecord);
-        current.cid = asNumber((pages[0] || {}).cid);
-        current.pageCount = pages.length;
+        const view = await fetchVideoView(host, { bvid: current.bvid }, ctx, cookie);
+        const first = view.pages[0];
+        current.cid = first ? first.cid : 0;
+        current.pageCount = view.pages.length;
       } catch {
         current.cid = 0;
       }

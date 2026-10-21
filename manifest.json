@@ -24,7 +24,10 @@
           "*://m.bilibili.com/bangumi/play/ep*",
           "*://www.bilibili.com/bangumi/media/md*",
           "*://bilibili.com/bangumi/media/md*",
-          "*://m.bilibili.com/bangumi/media/md*"
+          "*://m.bilibili.com/bangumi/media/md*",
+          "*://www.bilibili.com/video/*",
+          "*://bilibili.com/video/*",
+          "*://m.bilibili.com/video/*"
         ]
       },
       "entry": "resolve.js",

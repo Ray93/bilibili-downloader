@@ -21,6 +21,8 @@ export interface DashStream {
 }
 
 export interface DashInfo {
+  /** 秒；部分接口只给 play.timelength，所以两者都要看。 */
+  duration?: number;
   video?: DashStream[];
   audio?: DashStream[];
 }
@@ -122,11 +124,6 @@ export interface SpaceArcListing {
 export interface SpaceCard {
   name?: string;
   uname?: string;
-}
-
-export interface ViewResult {
-  title?: string;
-  pages?: Array<{ cid?: number | string }>;
 }
 
 export interface AuthProfileLike {

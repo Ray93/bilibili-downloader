@@ -12,12 +12,15 @@ import {
   chooseDashIndex,
   chooseVariantIndex,
   pickAudioTrack,
-  streamSize,
+  playDurationMs,
+  streamBytes,
   type Variant,
 } from "../media/quality";
 import { parseVideoItem } from "../shared/ids";
+import { itemBaseName } from "../shared/naming";
 import { asArray, asRecord, asText, sanitizeFileName } from "../shared/text";
-import type { DashStream, PlayResult, ViewResult } from "../shared/types";
+import type { DashStream, PlayResult } from "../shared/types";
+import { fetchVideoView, videoPageBaseName, type VideoView } from "../media/video";
 import { videoPlayUrl } from "./videos";
 
 /**
@@ -47,20 +50,19 @@ export async function resolveUploaderVideo(
   }
   if (!play) play = await apiGet<PlayResult>(host, videoPlayUrl(video), ctx, cookie);
 
-  let resolvedTitle = "";
+  let view: VideoView | null = null;
   try {
-    const view = await apiGet<ViewResult>(
-      host,
-      "/x/web-interface/view?bvid=" + encodeURIComponent(bvid),
-      ctx,
-      cookie,
-    );
-    resolvedTitle = asText(view && view.title);
+    view = await fetchVideoView(host, { bvid }, ctx, cookie);
   } catch {
-    // 取不到标题不影响下载，退回 bvid 作为文件名。
+    // 取不到 view 不影响下载：标题退回宿主给的条目名或 bvid。
   }
-  const ctxTitle = asText(asRecord(ctx).title);
-  const title = sanitizeFileName(ctxTitle || resolvedTitle || bvid);
+  // 宿主可能把清单条目名（已含画质标签与扩展名）当标题传来，先退成基准名再拼，
+  // 否则会出现 `xxx.mp4 [1080p-高清].mp4` 这类重复后缀。
+  const ctxTitle = itemBaseName(asRecord(ctx).title);
+  // 多P视频按 cid 取分P名，和第一段清单条目名保持一致；单P仍是纯视频标题。
+  const title = sanitizeFileName(
+    ctxTitle || (view ? videoPageBaseName(view, cid) : "") || bvid,
+  );
   const headers = requestHeaders(cookie, ctx);
   const dash = asRecord(play.dash);
   const audios = asArray(dash.audio) as DashStream[];
@@ -90,7 +92,7 @@ export async function resolveUploaderVideo(
     return {
       url: audioUrl(audio),
       fileName: title + " [audio].m4a",
-      totalBytes: streamSize(audio),
+      totalBytes: streamBytes(audio, playDurationMs(play)),
       extraHeaders: headers,
       ephemeral: true,
       rangeSupported: true,

@@ -11,6 +11,10 @@ export const USER_AGENT =
 
 export const MAX_EPISODES = 1000;
 export const MAX_VARIANTS = 16;
+/** 单个投稿视频最多列出的分P数：/video/ 链接的清单上限。 */
+export const MAX_VIDEO_PAGES = 100;
+/** 分P很多时只为前 N 个分P探测画质，其余分P出无画质条目，避免超出解析超时。 */
+export const MAX_VIDEO_QUALITY_PROBES = 24;
 export const MAX_SUBSCRIPTION_EPISODES = 50;
 export const UPLOADER_VIDEO_LIMIT = 20;
 

@@ -1,11 +1,28 @@
 // 单元测试用的假宿主：内存 storage、可配置 settings、可记录 remove 的 auth。
-import type { FluxSettingsValues } from "fluxdown-plugin-sdk";
+import type { FluxFetchResponse, FluxSettingsValues } from "fluxdown-plugin-sdk";
 import type { PluginHost } from "../host";
 
 export interface FakeHostOptions {
   settings?: Record<string, unknown>;
   storage?: Map<string, string>;
   authProfiles?: Record<string, unknown>;
+  /** 按 URL 路由的 fetch stub；不给则保持「未 stub」报错。 */
+  fetch?: (url: string, headers: Record<string, string>) => FakeResponse;
+}
+
+export interface FakeResponse {
+  status?: number;
+  body?: unknown;
+  headers?: Record<string, string>;
+}
+
+/** 构造 JSON 响应：body 会序列化成字符串，模拟宿主只给文本 body。 */
+export function jsonResponse(body: unknown, status = 200): FakeResponse {
+  return { status, body: JSON.stringify(body) };
+}
+
+export function htmlResponse(body: string, status = 200): FakeResponse {
+  return { status, body };
 }
 
 export interface FakeHost extends PluginHost {
@@ -43,8 +60,16 @@ export function makeHost(options: FakeHostOptions = {}): FakeHost {
       },
     },
     logger: { info() {}, warn() {}, error() {} },
-    async fetch(): Promise<never> {
-      throw new Error("fetch is not stubbed in this test");
+    async fetch(opts): Promise<FluxFetchResponse> {
+      if (!options.fetch) throw new Error("fetch is not stubbed in this test");
+      const response = options.fetch(opts.url, (opts.headers || {}) as Record<string, string>);
+      const body = typeof response.body === "string" ? response.body : String(response.body ?? "");
+      return {
+        status: response.status ?? 200,
+        headers: response.headers ?? {},
+        body,
+        truncated: false,
+      };
     },
   };
   return host;

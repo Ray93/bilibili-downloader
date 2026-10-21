@@ -7,6 +7,7 @@
 ## 功能
 
 - 支持番剧播放页 `/bangumi/play/ss...`、`/bangumi/play/ep...`，媒体页 `/bangumi/media/md...`，以及移动端（`m.bilibili.com`）同款链接
+- 支持普通投稿视频链接 `/video/BV...` 与 `/video/av...`（含 `m.bilibili.com`）：多P视频逐个分P列出，`?p=N` 只解析该分P
 - 自动发现正片分集；可选发现番外、预告、PV、采访等分区
 - DASH 画质选择：最佳、2160p、1440p、1080p、720p、480p，并支持仅下载音频（M4A）
 - 每个可用画质生成独立清单条目，文件名追加画质标签（例如 `[1080p-高清]`）
@@ -72,17 +73,19 @@ activity 栏的「Bilibili Downloader」视图显示：
 
 ## 使用
 
-1. 复制 Bilibili 番剧播放页或媒体页链接，交给 FluxDown 创建任务。
-2. 插件返回分集清单（每集可能有多个画质条目）。
-3. 选择需要的分集与画质；未手动选择时使用「默认画质」。
-4. FluxDown 为每一集获取短期播放地址并下载，番外分区会放入对应子目录。
+1. 复制 Bilibili 番剧播放页/媒体页，或普通投稿视频的 `/video/` 链接，交给 FluxDown 创建任务。
+2. 插件返回分集或分P清单（每一项可能有多个画质条目）。
+3. 选择需要的条目与画质；未手动选择时使用「默认画质」。
+4. FluxDown 逐条获取短期播放地址并下载，番剧番外分区会放入对应子目录。
 
 ## 解析流程
 
 插件分两阶段工作：
 
-1. 番剧链接 → 调用番剧接口，读取正片及可选附加分区的分集，为每集探测可用画质，返回扁平清单；
-2. 单集标识（`ep:<id>@q:<qualityId>`）→ 调用播放接口获取该画质的 DASH 视频/音频直链，再交回 FluxDown 下载与合并。
+1. 链接 → 清单：
+   - 番剧链接：调用番剧接口，读取正片及可选附加分区的分集，为每集探测可用画质，返回扁平清单；
+   - `/video/BV...`、`/video/av...`：用 view 接口把 av 号归一成 bvid，读取分P列表，为每个分P探测可用画质；链接带 `?p=N` 时只列该分P，否则列出全部（最多 100 个分P，仅前 24 个分P探测画质）。
+2. 清单条目 → 临时直链：番剧用 `ep:<id>@q:<qualityId>`，投稿视频用 `video:<bvid>:cid:<cid>@q:<qualityId>`，调用播放接口获取该画质的 DASH 视频/音频直链，再交回 FluxDown 下载与合并。
 
 插件本身不做后台轮询，也不主动创建任务；订阅轮询、去重、过滤和建任务由 FluxDown 核心负责。
 
@@ -110,9 +113,11 @@ https://www.bilibili.com/bangumi/play/ss12345
 
 **安装窗口看不到 `.fxplug`**：把扩展名改成 `.zip` 后再选择，不要解压或重复压缩。
 
-**解析失败**：依次检查 FluxDown 版本是否 ≥ 0.1.64、插件是否启用、链接是否为番剧页面、Cookie 是否有效、能否访问 `api.bilibili.com`。
+**解析失败**：依次检查 FluxDown 版本是否 ≥ 0.1.64、插件是否启用、链接是否为番剧页面或 `/video/BV...`、`/video/av...` 视频页（`b23.tv` 短链、合集页不支持）、Cookie 是否有效、能否访问 `api.bilibili.com`。
 
 **只能看到部分画质**：接口返回的画质取决于账号权限与视频本身；默认画质不会提升账号没有的权限。
+
+**清单里的文件大小准确吗**：DASH 的播放接口不返回文件大小，插件用 `bandwidth × 时长 / 8` 估算（实测与 CDN `Content-Length` 相差不到 0.1%）；带 `size` 字段的接口（如 FLV/durl）直接用真实值。
 
 **下载地址很快失效**：直链是临时的，建议解析后尽快开始下载；失败可重新解析或重试任务。
 
@@ -126,9 +131,10 @@ https://www.bilibili.com/bangumi/play/ss12345
 - `src/host.ts`：`PluginHost` 接口与 `flux` 适配（设置读取、storage JSON、日志）
 - `src/bilibili/shared/`：常量、接口类型、文本工具、条目 id、命名、MD5
 - `src/bilibili/http/`：API 客户端、Cookie 处理、WBI 签名
-- `src/bilibili/media/`：画质变体与选择、分集发现与命名、season 定位
+- `src/bilibili/media/`：画质变体与选择、分集发现与命名、season 定位、视频 view 与分P命名
 - `src/bilibili/bangumi/`：番剧两段式解析与番剧订阅
-- `src/bilibili/uploader/`：UP 主投稿列表、二段解析与投稿订阅
+- `src/bilibili/video/`：普通投稿视频链接（`/video/BV...`、`/video/av...`）→ 分P×画质清单
+- `src/bilibili/uploader/`：UP 主投稿列表、二段解析（分集/投稿直链）与投稿订阅
 - `src/bilibili/subscribe.ts`：订阅 provider 分发（番剧 / UP 主）
 - `src/auth/session.ts`：登录会话、认证档案保存/状态/注销
 - `src/tests/`：vitest 单元测试与 fake host

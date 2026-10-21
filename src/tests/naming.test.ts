@@ -1,6 +1,6 @@
 // 订阅标题命名与「每轮只取最近 N 集」的裁剪规则。
 import { describe, expect, it } from "vitest";
-import { subscriptionItemTitle, uploaderVideoTitle } from "../bilibili/shared/naming";
+import { subscriptionItemTitle, itemBaseName, uploaderVideoTitle } from "../bilibili/shared/naming";
 import { pickRecentEpisodes } from "../bilibili/bangumi/subscribe";
 
 describe("subscriptionItemTitle", () => {
@@ -32,6 +32,20 @@ describe("uploaderVideoTitle", () => {
 
   it("defaults to unknown-quality", () => {
     expect(uploaderVideoTitle("UP主", "标题", {})).toBe("UP主 - 标题 [unknown-quality].mp4");
+  });
+});
+
+describe("itemBaseName", () => {
+  it("strips the extension and one trailing quality tag", () => {
+    expect(itemBaseName("标题 [1080p-高清].mp4")).toBe("标题");
+    expect(itemBaseName("UP主 - 标题 [1080p 高清].mp4")).toBe("UP主 - 标题");
+  });
+
+  it("leaves a plain title alone", () => {
+    expect(itemBaseName("标题")).toBe("标题");
+    expect(itemBaseName("标题 [4K]")).toBe("标题 [4K]");
+    expect(itemBaseName("")).toBe("");
+    expect(itemBaseName(undefined)).toBe("");
   });
 });
 

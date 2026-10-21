@@ -17,7 +17,8 @@ import {
   chooseDashIndex,
   chooseVariantIndex,
   pickAudioTrack,
-  streamSize,
+  playDurationMs,
+  streamBytes,
   type Variant,
 } from "../media/quality";
 import { asArray, asRecord, asText, sanitizeFileName } from "../shared/text";
@@ -148,7 +149,7 @@ export async function resolveEpisode(
     return {
       url: audioUrl(audio),
       fileName: title + " [audio].m4a",
-      totalBytes: streamSize(audio),
+      totalBytes: streamBytes(audio, playDurationMs(play)),
       extraHeaders: headers,
       ephemeral: true,
       rangeSupported: true,

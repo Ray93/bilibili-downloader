@@ -47,15 +47,15 @@ There is no linter/formatter configured; do not claim a lint step exists.
 
 ## Architecture conventions
 
-- Resolver/auth logic lives in `src/bilibili/` — `shared/` (constants, types, text, ids, naming, crypto), `http/` (client, cookies, wbi), `media/` (quality, episodes, season), `bangumi/` (resolve, subscribe), `uploader/` (videos, resolve, subscribe) and the provider dispatcher `subscribe.ts` — plus `src/auth/session.ts`. Every module takes an explicit `PluginHost` (`src/host.ts`) — only `src/main.tsx`, `src/resolve.ts`, `src/auth.ts` touch the SDK runtime or the `flux` global.
+- Resolver/auth logic lives in `src/bilibili/` — `shared/` (constants, types, text, ids, naming, crypto), `http/` (client, cookies, wbi), `media/` (quality, episodes, season, video), `bangumi/` (resolve, subscribe), `video/` (resolve: `/video/` links → page × quality manifest), `uploader/` (videos, resolve, subscribe) and the provider dispatcher `subscribe.ts` — plus `src/auth/session.ts`. Every module takes an explicit `PluginHost` (`src/host.ts`) — only `src/main.tsx`, `src/resolve.ts`, `src/auth.ts` touch the SDK runtime or the `flux` global.
 - Source comments are written in Chinese; identifiers, API field names and user-facing/error strings keep their existing form.
 - Keep new logic host-injected and pure where possible: `src/tests/` covers these modules with a fake host (`src/tests/fake-host.ts`). Tests live under `src/` on purpose — the project include covers them, and esbuild never bundles them because they are not reachable from an entry.
 - `hostFromFlux(flux)` is cheap: re-adapt it per read in `main.tsx` instead of caching, because `flux.settings` may be a snapshot.
 
 ## Compatibility contracts (do not change casually)
 
-- Resolver items: `ep:<epId>`, `ep:<epId>@q:<qualityId|h<height>>`, `video:<bvid>:cid:<cid>[@q:...]`; parse via `src/bilibili/shared/ids.ts` and keep the existing Chinese error messages.
-- Manifest item ids (`ep:<id>@q:<qualityKey>`), item names (`<名> [<quality-tag>].<container>`), `path` for extras, and the flat item layout (the host UI has no nested variants).
+- Resolver items: `ep:<epId>`, `ep:<epId>@q:<qualityId|h<height>>`, `video:<bvid>:cid:<cid>[@q:...]`; parse via `src/bilibili/shared/ids.ts` and keep the existing Chinese error messages. `video:` items now come from both UP 主 subscriptions and single `/video/BV...` / `/video/av...` links; the av ↔ BV conversion is not done locally — the first stage reads `bvid` from the view API (`?aid=` with an HTML fallback) so item ids stay bvid-based.
+- Manifest item ids (`ep:<id>@q:<qualityKey>`), item names (`<名> [<quality-tag>].<container>`), `path` for extras, and the flat item layout (the host UI has no nested variants). Single-video manifests reuse the same naming: `<title> [<tag>].mp4` for one page, `<title> - P<n> <part> [<tag>].mp4` for multi-page videos — the second stage rebuilds that name through `videoPageBaseName` so the list name and the saved file name agree.
 - Resolve results keep `ephemeral: true`, `rangeSupported: true`, and `extraHeaders` (Cookie/Referer/UA) so the download stage can fetch the temporary URLs.
 - Subscription `providerId` is `bilibili-bangumi` (user-visible in the wizard) and subscription `guid`/`resolverItem` reuse the same item id formats.
 - Settings keys (`cookies`, `reuseStoredSession`, `includeExtras`, `highestQualityOnly`, `quality`) are read through `settingString`/`settingBool`; manifest boolean defaults arrive as `"true"`/`"false"` strings, so never use `Boolean(...)` on a setting.
@@ -67,6 +67,7 @@ There is no linter/formatter configured; do not claim a lint step exists.
 - Views are JSX view nodes, not HTML (`jsxImportSource: fluxdown-plugin-sdk/ui`). `src/env.d.ts` provides the JSX types — keep it.
 - View event node paths are derived from `key`s (`"root/<key>"`); `src/main.tsx` matches the last path segment, so new controls need unique keys.
 - The FNV/QuickJS host only gets text bodies from `flux.fetch`; handle API JSON defensively with the helpers in `src/bilibili/shared/text.ts`.
+- `/x/player/playurl` DASH entries carry no `size`/`filesize` field, only `bandwidth`; `streamBytes()` therefore falls back to `bandwidth × 时长 / 8` (measured within ~0.02% of the CDN `Content-Length`), so manifest item sizes are near-exact estimates, and explicit `size` always wins when the API provides one.
 
 ## Security and trust
 

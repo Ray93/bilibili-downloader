@@ -5,9 +5,11 @@ import {
   buildVideoItemId,
   isUploaderItem,
   isUploaderUrl,
+  isVideoUrl,
   parseEpisodeItem,
   parseVideoItem,
   uploaderMidFromUrl,
+  videoRefFromUrl,
 } from "../bilibili/shared/ids";
 
 describe("parseEpisodeItem", () => {
@@ -75,6 +77,49 @@ describe("uploaderMidFromUrl", () => {
   it("ignores non-uploader URLs", () => {
     expect(uploaderMidFromUrl("https://www.bilibili.com/bangumi/play/ss1")).toBe("");
     expect(isUploaderUrl("https://www.bilibili.com/bangumi/play/ss1")).toBe(false);
+  });
+});
+
+describe("videoRefFromUrl", () => {
+  it("reads a BV video URL", () => {
+    expect(videoRefFromUrl("https://www.bilibili.com/video/BV1h6H76sEEJ")).toEqual({
+      bvid: "BV1h6H76sEEJ",
+      aid: "",
+      page: 0,
+    });
+  });
+
+  it("reads an av video URL without losing precision", () => {
+    expect(videoRefFromUrl("https://www.bilibili.com/video/av114772146134896")).toEqual({
+      bvid: "",
+      aid: "114772146134896",
+      page: 0,
+    });
+  });
+
+  it("keeps the page number and ignores share noise", () => {
+    expect(
+      videoRefFromUrl(
+        "https://www.bilibili.com/video/BV1h6H76sEEJ/?p=3&spm_id_from=333.999&vd_source=abc",
+      ),
+    ).toEqual({ bvid: "BV1h6H76sEEJ", aid: "", page: 3 });
+  });
+
+  it("normalizes only the BV prefix", () => {
+    expect(videoRefFromUrl("https://m.bilibili.com/video/bv1h6H76sEEJ")?.bvid).toBe(
+      "BV1h6H76sEEJ",
+    );
+  });
+
+  it("ignores non-video URLs", () => {
+    expect(videoRefFromUrl("https://www.bilibili.com/bangumi/play/ss12345")).toEqual({
+      bvid: "",
+      aid: "",
+      page: 0,
+    });
+    expect(isVideoUrl("https://space.bilibili.com/123456")).toBe(false);
+    expect(isVideoUrl("https://b23.tv/abcdefg")).toBe(false);
+    expect(isVideoUrl("https://www.bilibili.com/video/av114772146134896")).toBe(true);
   });
 });
 
